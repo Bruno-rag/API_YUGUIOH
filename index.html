@@ -3,71 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Yu-GUI-OH!</title>
+  
+    <style>
+        #card-results-container {
+            display: flex;
+            gap: 20px; /* Espaço entre os cards */
+            flex-wrap: wrap; /* Permite que os cards quebrem a linha se a tela for pequena */
+            justify-content: center; /* Centraliza os cards */
+        }
+
+        .card {
+            border: 1px solid #ccc; /* Adiciona uma borda para separar os cards visualmente */
+            padding: 10px;
+            text-align: center;
+        }
+
+        .card img {
+            max-width: 100%; /* Garante que a imagem se ajuste ao contêiner */
+            height: auto;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <!-- <p>Escolha seus hobbies favoritos:</p>
-        <input type="checkbox" id="leitura" name="hobbies" value="leitura">
-        <label for="leitura">Leitura</label><br>
+        <p>Filtros:</p>
 
-        <input type="checkbox" id="musica" name="hobbies" value="musica">
-        <label for="musica">Música</label><br>
-
-        <input type="checkbox" id="esportes" name="hobbies" value="esportes">
-        <label for="esportes">Esportes</label><br>
-        <button type="submit">Enviar Formulário</button> -->
-        <p>Filtro 1:</p>
-
-        <select id="filtro1" name="filtro1">
-        <option value="op1">op1</option>
-        <option value="op2">op2</option>
-        <option value="op3">op3</option>
-        <option value="op4">op4</option>
-        
+        <select id="filtro-tipo" name="filtro-tipo">
+            <option value="">-- Selecione o Tipo --</option>
+            <option value="Normal Monster">Normal Monster</option>
+            <option value="Effect Monster">Effect Monster</option>
+            <option value="Spell Card">Spell Card</option>
+            <option value="Trap Card">Trap Card</option>
         </select>
 
-        <select id="filtro1" name="filtro1">
-        <option value="op1">op1</option>
-        <option value="op2">op2</option>
-        <option value="op3">op3</option>
-        <option value="op4">op4</option>
-        
+        <select id="filtro-nivel" name="filtro-nivel">
+            <option value="">-- Selecione o Nível --</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
         </select>
 
-        <select id="filtro1" name="filtro1">
-        <option value="op1">op1</option>
-        <option value="op2">op2</option>
-        <option value="op3">op3</option>
-        <option value="op4">op4</option>
-        
+        <select id="filtro-atributo" name="filtro-atributo">
+            <option value="">-- Selecione o Atributo --</option>
+            <option value="DARK">DARK</option>
+            <option value="DIVINE">DIVINE</option>
+            <option value="EARTH">EARTH</option>
+            <option value="FIRE">FIRE</option>
+            <option value="LIGHT">LIGHT</option>
+            <option value="WATER">WATER</option>
+            <option value="WIND">WIND</option>
         </select>
 
-        
-        <button type="submit">Enviar Formulário</button>
+        <button type="button" id="btn-enviar">Filtrar Cartas</button>
         <br>
 
-        <h1>Aqui vai o conteúdo</h1>
-        <script>
-            const apiUrl = 'https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark Magician';
+        <h1>Resultados da Pesquisa</h1>
 
-            fetch(apiUrl)
-            .then(response => {
-                // A primeira .then() lida com a resposta do servidor
-                // e a converte para JSON.
-                return response.json();
-            })
-            .then(data => {
-                // A segunda .then() lida com os dados já convertidos.
-                console.log(data); // Exibe os dados no console do navegador
-            })
-            .catch(error => {
-                // .catch() lida com qualquer erro que possa ocorrer durante a requisição.
-                console.error('Ocorreu um erro:', error);
-            });
-        </script>
-
+        <div id="card-results-container"></div>
+        
+        <script src="script.js"></script> 
     </header>
-    
 </body>
 </html>
