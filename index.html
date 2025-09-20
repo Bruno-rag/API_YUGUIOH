@@ -71,7 +71,39 @@
 
         <div id="card-results-container"></div>
         
-        <script src="script.js"></script> 
+        <!-- Script unificado com as três APIs -->
+        <script src="script.js"></script>
+        
+        <script>
+            // Adicionar evento de clique ao botão
+            document.getElementById('btn-enviar').addEventListener('click', async () => {
+                const tipo = document.getElementById('filtro-tipo').value;
+                const nivel = document.getElementById('filtro-nivel').value;
+                const atributo = document.getElementById('filtro-atributo').value;
+                
+                try {
+                    // Mostrar quais filtros estão sendo usados
+                    console.log('Filtros selecionados:', { tipo, nivel, atributo });
+                    
+                    if (!tipo && !nivel && !atributo) {
+                        alert('Por favor, selecione pelo menos um filtro para buscar as cartas.');
+                        return;
+                    }
+                    
+                    // Buscar cartas com todos os filtros selecionados
+                    const resultados = await buscarCartasFiltradas(tipo, nivel, atributo);
+                    
+                    if (resultados.length === 0) {
+                        alert('Nenhuma carta encontrada com os filtros selecionados.');
+                    }
+                    
+                    exibirResultados(resultados);
+                } catch (error) {
+                    console.error('Erro ao buscar cartas:', error);
+                    alert('Ocorreu um erro ao buscar as cartas. Por favor, tente novamente.');
+                }
+            });
+        </script>
     </header>
 </body>
 </html>
