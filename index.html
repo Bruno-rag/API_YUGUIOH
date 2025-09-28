@@ -3,107 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yu-GUI-OH!</title>
-  
+    <title>Multi-Card Game Search!</title>
+    
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        select, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
         #card-results-container {
             display: flex;
-            gap: 20px; /* Espaço entre os cards */
-            flex-wrap: wrap; /* Permite que os cards quebrem a linha se a tela for pequena */
-            justify-content: center; /* Centraliza os cards */
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
         }
 
         .card {
-            border: 1px solid #ccc; /* Adiciona uma borda para separar os cards visualmente */
-            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
             text-align: center;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 250px;
         }
 
         .card img {
-            max-width: 100%; /* Garante que a imagem se ajuste ao contêiner */
+            max-width: 100%;
             height: auto;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
     <header>
-        <p>Filtros:</p>
+        <h1>Busca de Cartas</h1>
+        <p>Selecione um jogo e filtre as cartas!</p>
+
+        <select id="filtro-game" name="filtro-game">
+            <option value="">-- Selecione o Jogo --</option>
+            <option value="Yu-Gi-Oh!">Yu-Gi-Oh!</option>
+            <option value="Hearthstone">Hearthstone</option>
+            <option value="Magic: The Gathering">Magic: The Gathering</option>
+        </select>
 
         <select id="filtro-tipo" name="filtro-tipo">
             <option value="">-- Selecione o Tipo --</option>
-            <option value="Normal Monster">Normal Monster</option>
-            <option value="Effect Monster">Effect Monster</option>
-            <option value="Spell Card">Spell Card</option>
-            <option value="Trap Card">Trap Card</option>
         </select>
-
-        <select id="filtro-nivel" name="filtro-nivel">
-            <option value="">-- Selecione o Nível --</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-            <option value="11">11</option>
-            <option value="12">12</option>
-        </select>
-
+        
         <select id="filtro-atributo" name="filtro-atributo">
             <option value="">-- Selecione o Atributo --</option>
-            <option value="DARK">DARK</option>
-            <option value="DIVINE">DIVINE</option>
-            <option value="EARTH">EARTH</option>
-            <option value="FIRE">FIRE</option>
-            <option value="LIGHT">LIGHT</option>
-            <option value="WATER">WATER</option>
-            <option value="WIND">WIND</option>
         </select>
 
         <button type="button" id="btn-enviar">Filtrar Cartas</button>
-        <br>
-
-        <h1>Resultados da Pesquisa</h1>
-
-        <div id="card-results-container"></div>
-        
-        <!-- Script unificado com as três APIs -->
-        <script src="script.js"></script>
-        
-        <script>
-            // Adicionar evento de clique ao botão
-            document.getElementById('btn-enviar').addEventListener('click', async () => {
-                const tipo = document.getElementById('filtro-tipo').value;
-                const nivel = document.getElementById('filtro-nivel').value;
-                const atributo = document.getElementById('filtro-atributo').value;
-                
-                try {
-                    // Mostrar quais filtros estão sendo usados
-                    console.log('Filtros selecionados:', { tipo, nivel, atributo });
-                    
-                    if (!tipo && !nivel && !atributo) {
-                        alert('Por favor, selecione pelo menos um filtro para buscar as cartas.');
-                        return;
-                    }
-                    
-                    // Buscar cartas com todos os filtros selecionados
-                    const resultados = await buscarCartasFiltradas(tipo, nivel, atributo);
-                    
-                    if (resultados.length === 0) {
-                        alert('Nenhuma carta encontrada com os filtros selecionados.');
-                    }
-                    
-                    exibirResultados(resultados);
-                } catch (error) {
-                    console.error('Erro ao buscar cartas:', error);
-                    alert('Ocorreu um erro ao buscar as cartas. Por favor, tente novamente.');
-                }
-            });
-        </script>
     </header>
+    
+    <div id="loading-indicator" style="display: none; text-align: center; margin-top: 20px;">
+        <p>Carregando...</p>
+    </div>
+    
+    <div id="card-results-container"></div>
+    
+    <script src="script.js"></script>
 </body>
 </html>

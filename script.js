@@ -1,232 +1,221 @@
-// Função para buscar cartas por tipo usando YGOPRODeck API
-async function buscarPorTipo(tipo) {
-    console.log('Buscando cartas do tipo usando YGOPRODeck API:', tipo);
-    try {
-        const url = `https://db.ygoprodeck.com/api/v7/cardinfo.php?type=${encodeURIComponent(tipo)}`;
-        console.log('URL da requisição (tipo):', url);
-        
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log('Resposta da API YGOPRODeck (tipo):', data);
-        
-        if (data.error) {
-            console.error('Erro retornado pela API YGOPRODeck:', data.error);
-            return [];
-        }
-        
-        // Mapear os dados para um formato consistente
-        const cartas = (data.data || []).map(carta => ({
-            name: carta.name,
-            type: carta.type,
-            attribute: carta.attribute,
-            level: carta.level,
-            image_url: carta.card_images?.[0]?.image_url,
-            desc: carta.desc,
-            atk: carta.atk,
-            def: carta.def,
-            id: carta.id
-        }));
-        
-        console.log(`YGOPRODeck: Encontradas ${cartas.length} cartas do tipo ${tipo}`);
-        return cartas;
-    } catch (error) {
-        console.error('Erro na API YGOPRODeck:', error);
-        return [];
+// Encontre os elementos de seleção e o botão
+const btnEnviar = document.getElementById('btn-enviar');
+const filtroGame = document.getElementById('filtro-game');
+const filtroTipo = document.getElementById('filtro-tipo');
+const filtroAtributo = document.getElementById('filtro-atributo');
+const cardResultsContainer = document.getElementById('card-results-container');
+const loadingIndicator = document.getElementById('loading-indicator');
+
+// Dados dos filtros para cada jogo
+const gameFilters = {
+    'Yu-Gi-Oh!': {
+        types: ['Normal Monster', 'Effect Monster', 'Spell Card', 'Trap Card'],
+        attributes: ['DARK', 'EARTH', 'FIRE', 'LIGHT', 'WATER', 'WIND']
+    },
+    'Hearthstone': {
+        types: ['Minion', 'Spell', 'Weapon'],
+        attributes: ['Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior', 'Neutral']
+    },
+    'Magic: The Gathering': {
+        types: ['Creature', 'Instant', 'Sorcery', 'Enchantment', 'Artifact', 'Planeswalker', 'Land'],
+        attributes: ['white', 'blue', 'black', 'red', 'green', 'colorless']
     }
+};
+
+// Mapeia o nome do jogo para a URL da API
+const apis = {
+    'Yu-Gi-Oh!': 'https://db.ygoprodeck.com/api/v7/cardinfo.php',
+    'Hearthstone': 'https://api.hearthstonejson.com/v1/latest/enUS/cards.json',
+    'Magic: The Gathering': 'https://api.scryfall.com/cards/search'
+};
+
+// Funções de normalização para cada jogo
+function normalizarYuGiOh(card) {
+    return {
+        name: card.name,
+        type: card.type,
+        attribute: card.attribute || 'N/A',
+        level: card.level || 'N/A',
+        imageUrl: card.card_images?.[0]?.image_url,
+        game: 'Yu-Gi-Oh!'
+    };
 }
 
-// Função para buscar cartas por atributo usando JustTCG API
-async function buscarPorAtributo(atributo) {
-    console.log('Buscando cartas do atributo usando JustTCG API:', atributo);
-    try {
-        // Usando a API JustTCG para buscar cartas
-        const response = await fetch('https://api.tcgplayer.com/catalog/products', {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': 'Bearer tcg_1e4b2667040f48f3bebac5dd622f8ec6'
-            }
-        });
-        const data = await response.json();
-        console.log('Resposta da JustTCG API:', data);
-
-        // Filtrar e mapear os resultados para o formato padrão
-        const cartas = data.results ? data.results
-            .filter(card => card.attribute === atributo)
-            .map(carta => ({
-                name: carta.name,
-                type: carta.productType || 'N/A',
-                attribute: carta.attribute,
-                level: carta.level || 'N/A',
-                image_url: carta.imageUrl,
-                desc: carta.description || '',
-                atk: carta.attack,
-                def: carta.defense,
-                id: carta.productId
-            })) : [];
-
-        console.log(`JustTCG: Encontradas ${cartas.length} cartas do atributo ${atributo}`);
-        return cartas;
-    } catch (error) {
-        console.error('Erro na JustTCG API:', error);
-        // Fallback para a YGOPRODeck API em caso de erro
-        console.log('Tentando fallback para YGOPRODeck API...');
-        return await buscarPorAtributoFallback(atributo);
-    }
+function normalizarHearthstone(card) {
+    return {
+        name: card.name,
+        type: card.type || 'N/A',
+        attribute: card.cardClass || 'N/A',
+        level: card.cost || 'N/A',
+        imageUrl: `https://art.hearthstonejson.com/v1/render/latest/enUS/512x/${card.id}.png`,
+        game: 'Hearthstone'
+    };
 }
 
-// Função para buscar cartas por nível usando Yu-Gi-Oh! Card API
-async function buscarPorNivel(nivel) {
-    console.log('Buscando cartas do nível usando Yu-Gi-Oh! Card API:', nivel);
-    try {
-        const response = await fetch(`https://ygo-api.vercel.app/api/v1/cards?level=${nivel}`);
-        const data = await response.json();
-        console.log('Resposta da Yu-Gi-Oh! Card API:', data);
-
-        // Mapear os resultados para o formato padrão
-        const cartas = Array.isArray(data) ? data.map(carta => ({
-            name: carta.name,
-            type: carta.type || 'N/A',
-            attribute: carta.attribute || 'N/A',
-            level: carta.level,
-            image_url: carta.card_images?.[0]?.image_url || carta.image_url,
-            desc: carta.desc || '',
-            atk: carta.atk,
-            def: carta.def,
-            id: carta.id
-        })) : [];
-
-        console.log(`Yu-Gi-Oh! Card API: Encontradas ${cartas.length} cartas do nível ${nivel}`);
-        return cartas;
-    } catch (error) {
-        console.error('Erro na Yu-Gi-Oh! Card API:', error);
-        // Fallback para a YGOPRODeck API em caso de erro
-        console.log('Tentando fallback para YGOPRODeck API...');
-        return await buscarPorNivelFallback(nivel);
-    }
+function normalizarMagic(card) {
+    return {
+        name: card.name,
+        type: card.type_line || 'N/A',
+        attribute: card.colors?.join(', ') || 'N/A',
+        level: card.cmc || 'N/A',
+        imageUrl: card.image_uris?.normal || card.card_faces?.[0]?.image_uris?.normal,
+        game: 'Magic: The Gathering'
+    };
 }
 
-// Funções de fallback usando YGOPRODeck API
-async function buscarPorAtributoFallback(atributo) {
-    try {
-        const response = await fetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?attribute=${encodeURIComponent(atributo)}`);
-        const data = await response.json();
-        return data.data ? data.data.map(carta => ({
-            name: carta.name,
-            type: carta.type,
-            attribute: carta.attribute,
-            level: carta.level,
-            image_url: carta.card_images?.[0]?.image_url,
-            desc: carta.desc,
-            atk: carta.atk,
-            def: carta.def,
-            id: carta.id
-        })) : [];
-    } catch (error) {
-        console.error('Erro no fallback para atributo:', error);
-        return [];
-    }
-}
-
-async function buscarPorNivelFallback(nivel) {
-    try {
-        const response = await fetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?level=${encodeURIComponent(nivel)}`);
-        const data = await response.json();
-        return data.data ? data.data.map(carta => ({
-            name: carta.name,
-            type: carta.type,
-            attribute: carta.attribute,
-            level: carta.level,
-            image_url: carta.card_images?.[0]?.image_url,
-            desc: carta.desc,
-            atk: carta.atk,
-            def: carta.def,
-            id: carta.id
-        })) : [];
-    } catch (error) {
-        console.error('Erro no fallback para nível:', error);
-        return [];
-    }
-}
-
-// Função para buscar cartas com múltiplos filtros
-async function buscarCartasFiltradas(tipo, nivel, atributo) {
-    console.log('Iniciando busca com filtros:', { tipo, nivel, atributo });
-    
-    try {
-        // Construir a URL com todos os filtros necessários
-        let url = 'https://db.ygoprodeck.com/api/v7/cardinfo.php?';
-        const params = [];
-        
-        if (tipo) params.push(`type=${encodeURIComponent(tipo)}`);
-        if (nivel) params.push(`level=${encodeURIComponent(nivel)}`);
-        if (atributo) params.push(`attribute=${encodeURIComponent(atributo)}`);
-        
-        url += params.join('&');
-        console.log('URL final da busca:', url);
-
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log('Resposta da API:', data);
-
-        if (data.error) {
-            console.error('Erro retornado pela API:', data.error);
-            return [];
-        }
-
-        // Mapear os dados para um formato consistente
-        const cartas = (data.data || []).map(carta => ({
-            name: carta.name,
-            type: carta.type,
-            attribute: carta.attribute,
-            level: carta.level,
-            image_url: carta.card_images?.[0]?.image_url,
-            desc: carta.desc,
-            atk: carta.atk,
-            def: carta.def,
-            id: carta.id
-        }));
-
-        console.log(`Encontradas ${cartas.length} cartas com os filtros especificados`);
-        return cartas;
-    } catch (error) {
-        console.error('Erro ao buscar cartas filtradas:', error);
-        return [];
-    }
-}
-
-// Função para exibir os resultados na página
+// Função para exibir os resultados na tela
 function exibirResultados(cartas) {
-    console.log('Exibindo resultados:', cartas);
-    const container = document.getElementById('card-results-container');
-    container.innerHTML = ''; // Limpa resultados anteriores
-    
+    cardResultsContainer.innerHTML = '';
+
     if (!cartas || cartas.length === 0) {
-        container.innerHTML = '<p style="text-align: center; width: 100%;">Nenhuma carta encontrada com os filtros selecionados.</p>';
+        const noResultMessage = document.createElement('p');
+        noResultMessage.textContent = 'Nenhuma carta encontrada com esses filtros.';
+        cardResultsContainer.appendChild(noResultMessage);
         return;
     }
 
-    // Mostrar quantidade de cartas encontradas
-    container.innerHTML = `<p style="text-align: center; width: 100%;">Encontradas ${cartas.length} cartas</p>`;
-
     cartas.forEach(carta => {
-        const cardElement = document.createElement('div');
-        cardElement.className = 'card';
-        
-        // Verifica se há imagem disponível
-        const imagemUrl = carta.image_url || '';
-        
-        // Adiciona os detalhes da carta
-        cardElement.innerHTML = `
+        const cardDiv = document.createElement('div');
+        cardDiv.classList.add('card');
+
+        cardDiv.innerHTML = `
             <h3>${carta.name || 'Nome não disponível'}</h3>
-            ${imagemUrl ? `<img src="${imagemUrl}" alt="${carta.name}" style="width: 200px;">` : ''}
+            <p><strong>Jogo:</strong> ${carta.game}</p>
+            <img src="${carta.imageUrl}" alt="${carta.name}" style="width: 200px;">
             <p><strong>Tipo:</strong> ${carta.type || 'N/A'}</p>
             <p><strong>Atributo:</strong> ${carta.attribute || 'N/A'}</p>
-            <p><strong>Nível:</strong> ${carta.level || 'N/A'}</p>
-            ${carta.desc ? `<p><strong>Descrição:</strong> ${carta.desc}</p>` : ''}
-            ${carta.atk !== undefined ? `<p><strong>ATK:</strong> ${carta.atk}</p>` : ''}
-            ${carta.def !== undefined ? `<p><strong>DEF:</strong> ${carta.def}</p>` : ''}
         `;
-        container.appendChild(cardElement);
+
+        cardResultsContainer.appendChild(cardDiv);
     });
 }
+
+// Função para atualizar os filtros com base no jogo selecionado
+function atualizarFiltros() {
+    const jogoSelecionado = filtroGame.value;
+    const filtrosDoJogo = gameFilters[jogoSelecionado];
+
+    // Limpa os filtros existentes
+    filtroTipo.innerHTML = '<option value="">-- Selecione o Tipo --</option>';
+    filtroAtributo.innerHTML = '<option value="">-- Selecione o Atributo --</option>';
+
+    if (filtrosDoJogo) {
+        // Preenche o filtro de Tipo
+        filtrosDoJogo.types.forEach(tipo => {
+            const option = document.createElement('option');
+            option.value = tipo;
+            option.textContent = tipo;
+            filtroTipo.appendChild(option);
+        });
+        
+        filtrosDoJogo.attributes.forEach(atributo => {
+            const option = document.createElement('option');
+            option.value = atributo;
+            option.textContent = atributo;
+            filtroAtributo.appendChild(option);
+        });
+    }
+}
+
+// Função principal para buscar dados da API
+async function buscarDadosAPI() {
+    cardResultsContainer.innerHTML = '';
+    loadingIndicator.style.display = 'block';
+    
+    const gameSelecionado = filtroGame.value;
+    const tipoSelecionado = filtroTipo.value;
+    const atributoSelecionado = filtroAtributo.value;
+
+    if (!gameSelecionado) {
+        alert("Por favor, selecione um card game.");
+        loadingIndicator.style.display = 'none';
+        return;
+    }
+
+    const apiUrlBase = apis[gameSelecionado];
+    let dataFromApi = { data: [] };
+
+    // Lógica para Yu-Gi-Oh!
+    if (gameSelecionado === 'Yu-Gi-Oh!') {
+        let params = {};
+        if (tipoSelecionado) params.type = tipoSelecionado;
+        if (atributoSelecionado) params.attribute = atributoSelecionado;
+        
+        const query = new URLSearchParams(params).toString();
+        const apiUrl = `${apiUrlBase}?${query}`;
+        
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Erro na requisição da API de Yu-Gi-Oh!: ' + response.statusText);
+            dataFromApi = await response.json();
+        } catch (error) {
+            console.error(error);
+            cardResultsContainer.innerHTML = `<p>Erro ao buscar dados de Yu-Gi-Oh!. Tente novamente.</p>`;
+            loadingIndicator.style.display = 'none';
+            return;
+        }
+    
+    // Lógica para Hearthstone
+    } else if (gameSelecionado === 'Hearthstone') {
+        try {
+            const response = await fetch(apiUrlBase);
+            if (!response.ok) throw new Error('Erro na requisição da API de Hearthstone: ' + response.statusText);
+            const allCards = await response.json();
+            
+            let filteredCards = allCards.filter(card => {
+                let match = true;
+                if (tipoSelecionado && card.type !== tipoSelecionado.toUpperCase()) match = false;
+                if (atributoSelecionado && card.cardClass !== atributoSelecionado.toUpperCase()) match = false;
+                return match;
+            });
+
+            dataFromApi.data = filteredCards;
+
+        } catch (error) {
+            console.error(error);
+            cardResultsContainer.innerHTML = `<p>Erro ao buscar dados de Hearthstone. Tente novamente.</p>`;
+            loadingIndicator.style.display = 'none';
+            return;
+        }
+    
+    // Lógica para Magic
+    } else if (gameSelecionado === 'Magic: The Gathering') {
+        let scryfallQuery = '';
+        if (tipoSelecionado) scryfallQuery += `type:${tipoSelecionado.toLowerCase()} `;
+        if (atributoSelecionado) scryfallQuery += `color:${atributoSelecionado.toLowerCase()} `;
+
+        const apiUrl = `${apiUrlBase}?q=${encodeURIComponent(scryfallQuery)}`;
+
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Erro na requisição da API de Magic: ' + response.statusText);
+            dataFromApi = await response.json();
+        } catch (error) {
+            console.error(error);
+            cardResultsContainer.innerHTML = `<p>Erro ao buscar dados de Magic. Tente novamente.</p>`;
+            loadingIndicator.style.display = 'none';
+            return;
+        }
+    }
+    
+    let cartas = [];
+    if (gameSelecionado === 'Yu-Gi-Oh!' && dataFromApi.data && dataFromApi.data.length > 0) {
+        cartas = dataFromApi.data.slice(0, 3).map(normalizarYuGiOh);
+    } else if (gameSelecionado === 'Hearthstone' && dataFromApi.data && dataFromApi.data.length > 0) {
+        cartas = dataFromApi.data.slice(0, 3).map(normalizarHearthstone);
+    } else if (gameSelecionado === 'Magic: The Gathering' && dataFromApi.data && dataFromApi.data.length > 0) {
+        cartas = dataFromApi.data.slice(0, 3).map(normalizarMagic);
+    }
+    
+    loadingIndicator.style.display = 'none';
+    exibirResultados(cartas);
+}
+
+// Adiciona o ouvinte de evento 'change' ao seletor de jogo
+filtroGame.addEventListener('change', atualizarFiltros);
+
+// Adiciona o ouvinte de evento 'click' ao botão
+btnEnviar.addEventListener('click', buscarDadosAPI);
+
+// Chama a função para preencher os filtros na carga da página
+atualizarFiltros();
